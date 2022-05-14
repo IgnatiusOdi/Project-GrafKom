@@ -75,6 +75,35 @@ gltfLoader.load("./camping_buscraft_ambience/scene.gltf", (gltf) => {
   });
 });
 
+//SHARK
+let shark;
+const loader = new GLTFLoader();
+const sharky = null;
+loader.load("./great_white_shark/scene.gltf", (gltf) => {
+  const sharky = gltf.scene;
+  sharky.traverse((c) => {
+    if (c.isMesh || c.isLight) {
+      c.castShadow = true;
+      c.receiveShadow = true;
+    }
+  });
+  sharky.position.y = -5;
+  sharky.position.x = 0;
+  sharky.position.z = 85;
+  sharky.rotateY(1.7);
+  sharky.scale.set(0.02, 0.02, 0.02);
+
+  scene.add(sharky);
+
+  shark = new THREE.AnimationMixer(sharky);
+  const sharkA = gltf.animations;
+  sharkA.forEach((clip) => {
+    const ac = shark.clipAction(clip);
+    ac.play();
+  });
+});
+
+
 // WATER
 const water = new Water(new THREE.PlaneGeometry(2000, 2000), {
   textureWidth: 512,
@@ -114,9 +143,13 @@ const clock = new THREE.Clock();
 
 function animate() {
   water.material.uniforms["time"].value += 1.0 / 60.0;
-
+  // sharky.rotateY(0.002);
   if (mixer) {
     mixer.update(clock.getDelta());
+  }
+
+  if(shark){
+    shark.update(clock.getDelta());
   }
 
   renderer.render(scene, camera);
