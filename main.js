@@ -81,11 +81,9 @@ gltfLoader.load("./great_white_shark/scene.gltf", (gltf) => {
   center.add(sharky);
 
   shark = new THREE.AnimationMixer(sharky);
-  const sharkA = gltf.animations;
-  sharkA.forEach((clip) => {
-    const ac = shark.clipAction(clip);
-    ac.play();
-  });
+  let clip = THREE.AnimationClip.findByName(gltf.animations, "SwimFast");
+  let action = shark.clipAction(clip);
+  action.play();
 });
 
 // WATER
