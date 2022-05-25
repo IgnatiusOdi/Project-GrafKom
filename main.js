@@ -3,6 +3,7 @@ import "./style.css";
 import * as THREE from "three";
 
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { FirstPersonControls } from "three/examples/jsm/controls/FirstPersonControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { Water } from "three/examples/jsm/objects/Water";
 
@@ -20,7 +21,7 @@ const scene = new THREE.Scene();
 
 // CAMERA
 const camera = new THREE.PerspectiveCamera(
-  60,
+  110,
   window.innerWidth / window.innerHeight,
   0.1,
   500
@@ -31,13 +32,15 @@ camera.position.set(0, 50, 50);
 const renderer = new THREE.WebGLRenderer({
   canvas: document.querySelector("#bg"),
   antialias: true,
+  powerPreference: "high-performance",
 });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x2b2f77, 1);
 // renderer.shadowMap.enabled = true;
 // renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-// renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.gammaFactor = 2.2;
+renderer.outputEncoding = THREE.sRGBEncoding;
 // renderer.toneMapping = THREE.ACESFilmicToneMapping;
 // renderer.toneMappingExposure = 1.0;
 
@@ -48,6 +51,9 @@ const controls = new OrbitControls(camera, renderer.domElement);
 // controls.enableDamping = true;
 // controls.minDistance = 50;
 controls.maxDistance = 250;
+// const controls = new FirstPersonControls(camera, renderer.domElement);
+// controls.lookSpeed = 0.8;
+// controls.movementSpeed = 5;
 
 // CENTER SPHERE
 const center = new THREE.Mesh(
@@ -59,12 +65,16 @@ const center = new THREE.Mesh(
 );
 scene.add(center);
 
-//SHARK
+// MANAGER
+const manager = new THREE.LoadingManager();
+manager.onLoad = () => animate();
+
+const gltfLoader = new GLTFLoader(manager);
+
+// SHARK
 let shark;
-const gltfLoader = new GLTFLoader();
-let sharky;
 gltfLoader.load("./great_white_shark/scene.gltf", (gltf) => {
-  sharky = gltf.scene;
+  let sharky = gltf.scene;
   sharky.traverse((c) => {
     if (c.isMesh || c.isLight) {
       c.castShadow = true;
@@ -85,6 +95,38 @@ gltfLoader.load("./great_white_shark/scene.gltf", (gltf) => {
   let action = shark.clipAction(clip);
   action.play();
 });
+
+// SHIP
+let ship;
+let shipModel;
+gltfLoader.load("./ship/scene.gltf", (gltf) => {
+  shipModel = gltf.scene;
+  shipModel.traverse((c) => {
+    if (c.isMesh) {
+      c.castShadow = true;
+      c.receiveShadow = true;
+      if (c.material.transparent) {
+        shipModel.alphaMode = 'BLEND';
+      } else if (c.material.alphaTest > 0.0 ) {
+        shipModel.alphaMode = 'MASK';
+        shipModel.alphaCutoff = c.material.alphaTest;
+      }
+    }
+  });
+
+  shipModel.position.y = 15;
+
+  shipModel.scale.set(5, 5, 5);
+
+  scene.add(shipModel);
+});
+
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(150, 150),
+  new THREE.MeshStandardMaterial({ color: 0x67c1ca })
+);
+floor.rotateX(- Math.PI / 2);
+scene.add(floor);
 
 // WATER
 // const water = new Water(new THREE.BoxGeometry(100, 100, 5), {
@@ -107,10 +149,10 @@ gltfLoader.load("./great_white_shark/scene.gltf", (gltf) => {
 
 // LIGHT
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-directionalLight.position.set(0, 100, 100);
-directionalLight.target.position.set(0, 0, 0);
+directionalLight.position.set(0, 100, 0);
+directionalLight.target = center;
 directionalLight.castShadow = true;
-// scene.add(directionalLight);
+scene.add(directionalLight);
 
 // HELPER
 const directionalLightHelper = new THREE.DirectionalLightHelper(
@@ -118,11 +160,14 @@ const directionalLightHelper = new THREE.DirectionalLightHelper(
   15
 );
 const gridHelper = new THREE.GridHelper(200, 200);
-// scene.add(directionalLightHelper);
+scene.add(directionalLightHelper);
 scene.add(gridHelper);
 
 // CLOCK
 const clock = new THREE.Clock();
+
+let sudutX = 0.001;
+let sudutZ = 0.00025;
 
 function animate() {
   center.rotateY(0.004);
@@ -131,12 +176,30 @@ function animate() {
     shark.update(clock.getDelta());
   }
 
+  if (ship) {
+    ship.update(clock.getDelta());
+  }
+
+  if (shipModel.rotation.x > 0.15 || shipModel.rotation.x < -0.02) {
+    sudutX *= -1;
+    console.log(shipModel.rotation.x);
+  }
+
+  if (shipModel.rotation.z > 0.03 || shipModel.rotation.z < -0.03) {
+    sudutZ *= -1;
+  }
+
+  shipModel.rotateX(sudutX);
+  shipModel.rotateY(sudutZ);
+  shipModel.rotateZ(sudutZ);
+
   // water.material.uniforms["time"].value += 1.0 / 120.0;
 
+  requestAnimationFrame(animate);
   controls.update();
   renderer.render(scene, camera);
 }
 
-renderer.setAnimationLoop(animate);
+// renderer.setAnimationLoop(animate);
 
 animate();
