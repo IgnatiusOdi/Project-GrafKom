@@ -7,6 +7,7 @@ import { FirstPersonControls } from "three/examples/jsm/controls/FirstPersonCont
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { Water } from "three/examples/jsm/objects/Water";
 
+
 // WINDOW EVENT LISTENER
 window.addEventListener("resize", onWindowResize, false);
 
@@ -121,6 +122,34 @@ gltfLoader.load("./ship/scene.gltf", (gltf) => {
   scene.add(shipModel);
 });
 
+//lampu kapal
+let lantern1OBJ;
+gltfLoader.load("./old_lantern/scene.gltf", (gltf) => {
+  lantern1OBJ = gltf.scene;
+  lantern1OBJ.traverse((c) => {
+    if (c.isMesh) {
+      c.castShadow = false;
+      c.receiveShadow = true;
+    }
+  });
+  lantern1OBJ.position.y = 0;
+  lantern1OBJ.rotateY(1.55);
+  lantern1OBJ.position.z = 0.55;
+  lantern1OBJ.scale.set(0.01, 0.01, 0.01);
+  shipModel.add(lantern1OBJ);
+  //light source buat lampu abal
+  const lsLant1 = new THREE.PointLight(0xc9343a,10,45,5);
+  lsLant1.position.y = 4;
+  lsLant1.position.x = 4;
+
+  lsLant1.castShadow = true;
+  //light helper
+  const lsHelper = new THREE.PointLightHelper(lsLant1,10);
+  lantern1OBJ.add(lsLant1);
+  scene.add(lsHelper);
+});
+
+
 const floor = new THREE.Mesh(
   new THREE.PlaneGeometry(150, 150),
   new THREE.MeshStandardMaterial({ color: 0x67c1ca })
@@ -128,7 +157,7 @@ const floor = new THREE.Mesh(
 floor.rotateX(- Math.PI / 2);
 scene.add(floor);
 
-// WATER
+//WATER
 // const water = new Water(new THREE.BoxGeometry(100, 100, 5), {
 //   textureWidth: 512,
 //   textureHeight: 512,
@@ -148,7 +177,7 @@ scene.add(floor);
 // scene.add(water);
 
 // LIGHT
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.2);
 directionalLight.position.set(0, 100, 0);
 directionalLight.target = center;
 directionalLight.castShadow = true;
@@ -203,3 +232,4 @@ function animate() {
 // renderer.setAnimationLoop(animate);
 
 animate();
+
