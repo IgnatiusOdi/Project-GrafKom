@@ -138,7 +138,7 @@ gltfLoader.load("./old_lantern/scene.gltf", (gltf) => {
   lantern1OBJ.scale.set(0.01, 0.01, 0.01);
   shipModel.add(lantern1OBJ);
   //light source buat lampu abal
-  const lsLant1 = new THREE.PointLight(0xc9343a,10,45,5);
+  const lsLant1 = new THREE.PointLight(0xc9343a,8,45,5);
   lsLant1.position.y = 4;
   lsLant1.position.x = 4;
 
@@ -148,6 +148,62 @@ gltfLoader.load("./old_lantern/scene.gltf", (gltf) => {
   lantern1OBJ.add(lsLant1);
   scene.add(lsHelper);
 });
+//lampu ke 2 (putih)
+let lantern2OBJ;
+gltfLoader.load("./old_street_lantern/scene.gltf", (gltf) => {
+  lantern2OBJ = gltf.scene;
+  lantern2OBJ.traverse((c) => {
+    if (c.isMesh) {
+      c.castShadow = false;
+      c.receiveShadow = true;
+    }
+  });
+  lantern2OBJ.position.y = 0;
+
+  lantern2OBJ.position.z = 4.06;
+  lantern2OBJ.position.x = -0.09;
+  lantern2OBJ.scale.set(0.03, 0.03, 0.03);
+  shipModel.add(lantern2OBJ);
+  //light source buat lampu putih
+  const lsLant2 = new THREE.PointLight(0xffffff,5,45,5);
+  lsLant2.position.y = 12;
+  lsLant2.position.x = -1;
+  lsLant2.position.z = 2;
+  lsLant2.castShadow = true;
+  //light helper
+  const lsHelper2 = new THREE.PointLightHelper(lsLant2,1);
+  lantern2OBJ.add(lsLant2);
+  scene.add(lsHelper2);
+});
+
+//lampu ke 3 (kuning / terngkorak)
+let lantern3OBJ;
+gltfLoader.load("./skull_lantern/scene.gltf", (gltf) => {
+  lantern3OBJ = gltf.scene;
+  lantern3OBJ.traverse((c) => {
+    if (c.isMesh) {
+      c.castShadow = false;
+      c.receiveShadow = true;
+    }
+  });
+  lantern3OBJ.position.y = 0;
+
+  lantern3OBJ.position.z = -4.06;
+  lantern3OBJ.position.x = 0.155;
+  lantern3OBJ.scale.set(0.03, 0.03, 0.03);
+  shipModel.add(lantern3OBJ);
+  //light source buat lampu 3
+  const lsLant3 = new THREE.PointLight(0xffffff,5,45,5);
+  // lsLant3.position.y = 12;
+  // lsLant3.position.x = -1;
+  // lsLant3.position.z = 2;
+  lsLant3.castShadow = true;
+  //light helper
+  const lsHelper3 = new THREE.PointLightHelper(lsLant3,1);
+  lantern3OBJ.add(lsLant3);
+  scene.add(lsHelper3);
+});
+
 
 
 const floor = new THREE.Mesh(
@@ -218,9 +274,9 @@ function animate() {
     sudutZ *= -1;
   }
 
-  shipModel.rotateX(sudutX);
-  shipModel.rotateY(sudutZ);
-  shipModel.rotateZ(sudutZ);
+  // shipModel.rotateX(sudutX);
+  // shipModel.rotateY(sudutZ);
+  // shipModel.rotateZ(sudutZ);
 
   // water.material.uniforms["time"].value += 1.0 / 120.0;
 
