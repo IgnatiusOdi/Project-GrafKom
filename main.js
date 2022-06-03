@@ -186,17 +186,17 @@ gltfLoader.load("./skull_lantern/scene.gltf", (gltf) => {
       c.receiveShadow = true;
     }
   });
+  lantern3OBJ.rotateY(3.1);
   lantern3OBJ.position.y = 0;
-
   lantern3OBJ.position.z = -4.06;
   lantern3OBJ.position.x = 0.155;
   lantern3OBJ.scale.set(0.03, 0.03, 0.03);
   shipModel.add(lantern3OBJ);
   //light source buat lampu 3
-  const lsLant3 = new THREE.PointLight(0xffffff,5,45,5);
-  // lsLant3.position.y = 12;
+  const lsLant3 = new THREE.PointLight(0xffbc3d,5,45,5);
+  lsLant3.position.y = 5.5;
   // lsLant3.position.x = -1;
-  // lsLant3.position.z = 2;
+  lsLant3.position.z = 0.2;
   lsLant3.castShadow = true;
   //light helper
   const lsHelper3 = new THREE.PointLightHelper(lsLant3,1);
