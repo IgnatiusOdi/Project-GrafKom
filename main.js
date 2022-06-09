@@ -3,10 +3,11 @@ import "./style.css";
 import * as THREE from "three";
 
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { FirstPersonControls } from "three/examples/jsm/controls/FirstPersonControls";
+import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { Water } from "three/examples/jsm/objects/Water";
 
+let switchControls = 1;
 
 // WINDOW EVENT LISTENER
 window.addEventListener("resize", onWindowResize, false);
@@ -49,12 +50,50 @@ renderer.outputEncoding = THREE.sRGBEncoding;
 const controls = new OrbitControls(camera, renderer.domElement);
 // controls.autoRotate = true;
 // controls.autoRotate = 0.5;
-// controls.enableDamping = true;
-// controls.minDistance = 50;
+controls.enableDamping = true;
+controls.minDistance = 50;
 controls.maxDistance = 250;
-// const controls = new FirstPersonControls(camera, renderer.domElement);
-// controls.lookSpeed = 0.8;
-// controls.movementSpeed = 5;
+
+window.addEventListener("keydown", function(e) {
+  if (e.defaultPrevented) {
+    return;
+  }
+
+  if (e.key == "`") {
+    if (switchControls == 1) {
+      this.window.alert("Pointer Lock Controls Enabled");
+      switchControls = 2;
+      camera.position.y = 10;
+      controls.enabled = false;
+    } else {
+      this.window.alert("Orbit Controls Enabled");
+      switchControls = 1;
+      controls.enabled = true;
+    }
+  }
+
+  if (pointerLockControls.isLocked) {
+    if (e.key == "w") {
+      pointerLockControls.moveForward(2);
+    } else if (e.key == "a") {
+      pointerLockControls.moveRight(-2);
+    } else if (e.key == "s") {
+      pointerLockControls.moveForward(-2);
+    } else if (e.key == "d") {
+      pointerLockControls.moveRight(2);
+    }
+  }
+});
+
+const pointerLockControls = new PointerLockControls(
+  camera,
+  renderer.domElement
+);
+window.addEventListener("click", function () {
+  if (switchControls == 2) {
+    pointerLockControls.lock();
+  }
+});
 
 // CENTER SPHERE
 const center = new THREE.Mesh(
@@ -98,7 +137,6 @@ gltfLoader.load("./great_white_shark/scene.gltf", (gltf) => {
 });
 
 // SHIP
-let ship;
 let shipModel;
 gltfLoader.load("./ship/scene.gltf", (gltf) => {
   shipModel = gltf.scene;
@@ -107,9 +145,9 @@ gltfLoader.load("./ship/scene.gltf", (gltf) => {
       c.castShadow = true;
       c.receiveShadow = true;
       if (c.material.transparent) {
-        shipModel.alphaMode = 'BLEND';
-      } else if (c.material.alphaTest > 0.0 ) {
-        shipModel.alphaMode = 'MASK';
+        shipModel.alphaMode = "BLEND";
+      } else if (c.material.alphaTest > 0.0) {
+        shipModel.alphaMode = "MASK";
         shipModel.alphaCutoff = c.material.alphaTest;
       }
     }
@@ -138,16 +176,17 @@ gltfLoader.load("./old_lantern/scene.gltf", (gltf) => {
   lantern1OBJ.scale.set(0.01, 0.01, 0.01);
   shipModel.add(lantern1OBJ);
   //light source buat lampu abal
-  const lsLant1 = new THREE.PointLight(0xc9343a,8,45,5);
+  const lsLant1 = new THREE.PointLight(0xc9343a, 8, 45, 5);
   lsLant1.position.y = 4;
   lsLant1.position.x = 4;
 
   lsLant1.castShadow = true;
   //light helper
-  const lsHelper = new THREE.PointLightHelper(lsLant1,10);
+  const lsHelper = new THREE.PointLightHelper(lsLant1, 10);
   lantern1OBJ.add(lsLant1);
   scene.add(lsHelper);
 });
+
 //lampu ke 2 (putih)
 let lantern2OBJ;
 gltfLoader.load("./old_street_lantern/scene.gltf", (gltf) => {
@@ -165,13 +204,13 @@ gltfLoader.load("./old_street_lantern/scene.gltf", (gltf) => {
   lantern2OBJ.scale.set(0.03, 0.03, 0.03);
   shipModel.add(lantern2OBJ);
   //light source buat lampu putih
-  const lsLant2 = new THREE.PointLight(0xffffff,5,45,5);
+  const lsLant2 = new THREE.PointLight(0xffffff, 5, 45, 5);
   lsLant2.position.y = 12;
   lsLant2.position.x = -1;
   lsLant2.position.z = 2;
   lsLant2.castShadow = true;
   //light helper
-  const lsHelper2 = new THREE.PointLightHelper(lsLant2,1);
+  const lsHelper2 = new THREE.PointLightHelper(lsLant2, 1);
   lantern2OBJ.add(lsLant2);
   scene.add(lsHelper2);
 });
@@ -193,24 +232,22 @@ gltfLoader.load("./skull_lantern/scene.gltf", (gltf) => {
   lantern3OBJ.scale.set(0.03, 0.03, 0.03);
   shipModel.add(lantern3OBJ);
   //light source buat lampu 3
-  const lsLant3 = new THREE.PointLight(0xffbc3d,5,45,5);
+  const lsLant3 = new THREE.PointLight(0xffbc3d, 5, 45, 5);
   lsLant3.position.y = 5.5;
   // lsLant3.position.x = -1;
   lsLant3.position.z = 0.2;
   lsLant3.castShadow = true;
   //light helper
-  const lsHelper3 = new THREE.PointLightHelper(lsLant3,1);
+  const lsHelper3 = new THREE.PointLightHelper(lsLant3, 1);
   lantern3OBJ.add(lsLant3);
   scene.add(lsHelper3);
 });
-
-
 
 const floor = new THREE.Mesh(
   new THREE.PlaneGeometry(150, 150),
   new THREE.MeshStandardMaterial({ color: 0x67c1ca })
 );
-floor.rotateX(- Math.PI / 2);
+floor.rotateX(-Math.PI / 2);
 scene.add(floor);
 
 //WATER
@@ -261,31 +298,28 @@ function animate() {
     shark.update(clock.getDelta());
   }
 
-  if (ship) {
-    ship.update(clock.getDelta());
-  }
+  if (shipModel) {
+    if (shipModel.rotation.x > 0.15 || shipModel.rotation.x < -0.02) {
+      sudutX *= -1;
+      // console.log(shipModel.rotation.x);
+    }
 
-  if (shipModel.rotation.x > 0.15 || shipModel.rotation.x < -0.02) {
-    sudutX *= -1;
-    console.log(shipModel.rotation.x);
-  }
+    if (shipModel.rotation.z > 0.03 || shipModel.rotation.z < -0.03) {
+      sudutZ *= -1;
+    }
 
-  if (shipModel.rotation.z > 0.03 || shipModel.rotation.z < -0.03) {
-    sudutZ *= -1;
+    shipModel.rotateX(sudutX);
+    shipModel.rotateY(sudutZ);
+    shipModel.rotateZ(sudutZ);
   }
-
-  // shipModel.rotateX(sudutX);
-  // shipModel.rotateY(sudutZ);
-  // shipModel.rotateZ(sudutZ);
 
   // water.material.uniforms["time"].value += 1.0 / 120.0;
 
   requestAnimationFrame(animate);
-  controls.update();
+  if (switchControls == 1) {
+    controls.update();
+  }
   renderer.render(scene, camera);
 }
 
-// renderer.setAnimationLoop(animate);
-
 animate();
-
