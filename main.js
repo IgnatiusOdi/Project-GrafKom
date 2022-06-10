@@ -50,9 +50,9 @@ renderer.outputEncoding = THREE.sRGBEncoding;
 const controls = new OrbitControls(camera, renderer.domElement);
 // controls.autoRotate = true;
 // controls.autoRotate = 0.5;
-controls.enableDamping = true;
-controls.minDistance = 50;
-controls.maxDistance = 250;
+// controls.enableDamping = true;
+// controls.minDistance = 50;
+// controls.maxDistance = 250;
 
 window.addEventListener("keydown", function(e) {
   if (e.defaultPrevented) {
@@ -105,6 +105,8 @@ const center = new THREE.Mesh(
 );
 scene.add(center);
 
+
+
 // MANAGER
 const manager = new THREE.LoadingManager();
 manager.onLoad = () => animate();
@@ -138,6 +140,8 @@ gltfLoader.load("./great_white_shark/scene.gltf", (gltf) => {
 
 // SHIP
 let shipModel;
+let sphereLampu;
+let lantern3OBJ;
 gltfLoader.load("./ship/scene.gltf", (gltf) => {
   shipModel = gltf.scene;
   shipModel.traverse((c) => {
@@ -156,91 +160,8 @@ gltfLoader.load("./ship/scene.gltf", (gltf) => {
   shipModel.position.y = 15;
 
   shipModel.scale.set(5, 5, 5);
-
+  lanternLoader();
   scene.add(shipModel);
-});
-
-//lampu kapal
-let lantern1OBJ;
-gltfLoader.load("./old_lantern/scene.gltf", (gltf) => {
-  lantern1OBJ = gltf.scene;
-  lantern1OBJ.traverse((c) => {
-    if (c.isMesh) {
-      c.castShadow = false;
-      c.receiveShadow = true;
-    }
-  });
-  lantern1OBJ.position.y = 0;
-  lantern1OBJ.rotateY(1.55);
-  lantern1OBJ.position.z = 0.55;
-  lantern1OBJ.scale.set(0.01, 0.01, 0.01);
-  shipModel.add(lantern1OBJ);
-  //light source buat lampu abal
-  const lsLant1 = new THREE.PointLight(0xc9343a, 8, 45, 5);
-  lsLant1.position.y = 4;
-  lsLant1.position.x = 4;
-
-  lsLant1.castShadow = true;
-  //light helper
-  const lsHelper = new THREE.PointLightHelper(lsLant1, 10);
-  lantern1OBJ.add(lsLant1);
-  scene.add(lsHelper);
-});
-
-//lampu ke 2 (putih)
-let lantern2OBJ;
-gltfLoader.load("./old_street_lantern/scene.gltf", (gltf) => {
-  lantern2OBJ = gltf.scene;
-  lantern2OBJ.traverse((c) => {
-    if (c.isMesh) {
-      c.castShadow = false;
-      c.receiveShadow = true;
-    }
-  });
-  lantern2OBJ.position.y = 0;
-
-  lantern2OBJ.position.z = 4.06;
-  lantern2OBJ.position.x = -0.09;
-  lantern2OBJ.scale.set(0.03, 0.03, 0.03);
-  shipModel.add(lantern2OBJ);
-  //light source buat lampu putih
-  const lsLant2 = new THREE.PointLight(0xffffff, 5, 45, 5);
-  lsLant2.position.y = 12;
-  lsLant2.position.x = -1;
-  lsLant2.position.z = 2;
-  lsLant2.castShadow = true;
-  //light helper
-  const lsHelper2 = new THREE.PointLightHelper(lsLant2, 1);
-  lantern2OBJ.add(lsLant2);
-  scene.add(lsHelper2);
-});
-
-//lampu ke 3 (kuning / terngkorak)
-let lantern3OBJ;
-gltfLoader.load("./skull_lantern/scene.gltf", (gltf) => {
-  lantern3OBJ = gltf.scene;
-  lantern3OBJ.traverse((c) => {
-    if (c.isMesh) {
-      c.castShadow = false;
-      c.receiveShadow = true;
-    }
-  });
-  lantern3OBJ.rotateY(3.1);
-  lantern3OBJ.position.y = 0;
-  lantern3OBJ.position.z = -4.06;
-  lantern3OBJ.position.x = 0.155;
-  lantern3OBJ.scale.set(0.03, 0.03, 0.03);
-  shipModel.add(lantern3OBJ);
-  //light source buat lampu 3
-  const lsLant3 = new THREE.PointLight(0xffbc3d, 5, 45, 5);
-  lsLant3.position.y = 5.5;
-  // lsLant3.position.x = -1;
-  lsLant3.position.z = 0.2;
-  lsLant3.castShadow = true;
-  //light helper
-  const lsHelper3 = new THREE.PointLightHelper(lsLant3, 1);
-  lantern3OBJ.add(lsLant3);
-  scene.add(lsHelper3);
 });
 
 const floor = new THREE.Mesh(
@@ -290,6 +211,9 @@ const clock = new THREE.Clock();
 
 let sudutX = 0.001;
 let sudutZ = 0.00025;
+let goyang = 0.005;
+
+
 
 function animate() {
   center.rotateY(0.004);
@@ -298,6 +222,11 @@ function animate() {
     shark.update(clock.getDelta());
   }
 
+  if(sphereLampu){
+    if(sphereLampu.rotation.z > 0.2 || sphereLampu.rotation.z < -0.2)
+      goyang *= -1;
+  }
+  
   if (shipModel) {
     if (shipModel.rotation.x > 0.15 || shipModel.rotation.x < -0.02) {
       sudutX *= -1;
@@ -311,6 +240,7 @@ function animate() {
     shipModel.rotateX(sudutX);
     shipModel.rotateY(sudutZ);
     shipModel.rotateZ(sudutZ);
+    sphereLampu.rotateZ(goyang);
   }
 
   // water.material.uniforms["time"].value += 1.0 / 120.0;
@@ -321,5 +251,102 @@ function animate() {
   }
   renderer.render(scene, camera);
 }
+
+function lanternLoader(){
+
+  //lampu kapal #1
+  let lantern1OBJ;
+  gltfLoader.load("./old_lantern/scene.gltf", (gltf) => {
+    lantern1OBJ = gltf.scene;
+    lantern1OBJ.traverse((c) => {
+      if (c.isMesh) {
+        c.castShadow = false;
+        c.receiveShadow = true;
+      }
+    });
+    lantern1OBJ.position.y = 0;
+    lantern1OBJ.rotateY(1.55);
+    lantern1OBJ.position.z = 0.55;
+    lantern1OBJ.scale.set(0.01, 0.01, 0.01);
+    shipModel.add(lantern1OBJ);
+    //light source buat lampu abal
+    const lsLant1 = new THREE.PointLight(0xc9343a, 8, 45, 5);
+    lsLant1.position.y = 4;
+    lsLant1.position.x = 4;
+  
+    lsLant1.castShadow = true;
+    //light helper
+    const lsHelper = new THREE.PointLightHelper(lsLant1, 10);
+    lantern1OBJ.add(lsLant1);
+    scene.add(lsHelper);
+  });
+  
+  //lampu ke 2 (putih)
+  let lantern2OBJ;
+  gltfLoader.load("./old_street_lantern/scene.gltf", (gltf) => {
+    lantern2OBJ = gltf.scene;
+    lantern2OBJ.traverse((c) => {
+      if (c.isMesh) {
+        c.castShadow = false;
+        c.receiveShadow = true;
+      }
+    });
+    lantern2OBJ.position.y = 0;
+  
+    lantern2OBJ.position.z = 4.06;
+    lantern2OBJ.position.x = -0.09;
+    lantern2OBJ.scale.set(0.03, 0.03, 0.03);
+    shipModel.add(lantern2OBJ);
+    //light source buat lampu putih
+    const lsLant2 = new THREE.PointLight(0xffffff, 5, 45, 5);
+    lsLant2.position.y = 12;
+    lsLant2.position.x = -1;
+    lsLant2.position.z = 2;
+    lsLant2.castShadow = true;
+    //light helper
+    const lsHelper2 = new THREE.PointLightHelper(lsLant2, 1);
+    lantern2OBJ.add(lsLant2);
+    scene.add(lsHelper2);
+  });
+  //sphere buat pacuan lampu gantung
+  sphereLampu = new THREE.Mesh(
+    new THREE.SphereGeometry(2, 12, 12),
+    new THREE.MeshStandardMaterial({
+      transparent: true,
+      opacity: 0,
+    })
+    );
+    sphereLampu.position.x = 0.155;
+    sphereLampu.position.y = 0.05;
+    sphereLampu.position.z = -4.11;
+    sphereLampu.scale.set(0.01,0.01,0.01);
+  
+  shipModel.add(sphereLampu);
+  //lampu ke 3 (kuning / terngkorak)
+  gltfLoader.load("./skull_lantern/scene.gltf", (gltf) => {
+  lantern3OBJ = gltf.scene;
+  lantern3OBJ.traverse((c) => {
+    if (c.isMesh) {
+      c.castShadow = false;
+      c.receiveShadow = true;
+    }
+  });
+  lantern3OBJ.rotateY(3.1);
+  lantern3OBJ.position.y = -35;
+  lantern3OBJ.scale.set(2, 2, 2);
+  sphereLampu.add(lantern3OBJ);
+  
+  //light source buat lampu 3
+  const lsLant3 = new THREE.PointLight(0xffbc3d, 5, 45, 5);
+  lsLant3.position.y = 5.5;
+  // lsLant3.position.x = -1;
+  lsLant3.position.z = 0.2;
+  lsLant3.castShadow = true;
+  //light helper
+  const lsHelper3 = new THREE.PointLightHelper(lsLant3, 1);
+  lantern3OBJ.add(lsLant3);
+  scene.add(lsHelper3);
+  });
+  }
 
 animate();
