@@ -1,6 +1,7 @@
 import "./style.css";
 
 import * as THREE from "three";
+import { GUI } from 'dat.gui';
 
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
@@ -8,6 +9,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { Water } from "three/examples/jsm/objects/Water";
 
 let switchControls = 1;
+
 
 // WINDOW EVENT LISTENER
 window.addEventListener("resize", onWindowResize, false);
@@ -26,7 +28,7 @@ const camera = new THREE.PerspectiveCamera(
   110,
   window.innerWidth / window.innerHeight,
   0.1,
-  500
+  1000
 );
 camera.position.set(0, 50, 50);
 
@@ -142,6 +144,11 @@ gltfLoader.load("./great_white_shark/scene.gltf", (gltf) => {
 let shipModel;
 let sphereLampu;
 let lantern3OBJ;
+let lantern2OBJ;
+let lantern1OBJ;
+const lsLant1 = new THREE.PointLight(0xc9343a, 5, 45, 5);
+const lsLant2 = new THREE.PointLight(0xffffff, 5, 45, 5);
+const lsLant3 = new THREE.PointLight(0xffbc3d, 5, 45, 5);
 gltfLoader.load("./ship/scene.gltf", (gltf) => {
   shipModel = gltf.scene;
   shipModel.traverse((c) => {
@@ -163,6 +170,9 @@ gltfLoader.load("./ship/scene.gltf", (gltf) => {
   lanternLoader();
   scene.add(shipModel);
 });
+
+//FOG
+//scene.fog = new THREE.Fog
 
 const floor = new THREE.Mesh(
   new THREE.PlaneGeometry(150, 150),
@@ -205,6 +215,36 @@ const directionalLightHelper = new THREE.DirectionalLightHelper(
 const gridHelper = new THREE.GridHelper(200, 200);
 scene.add(directionalLightHelper);
 scene.add(gridHelper);
+
+
+
+//GUI
+const gui = new GUI();
+const lightFolder = gui.addFolder('Lighting');
+lightFolder.open();
+//dirrectional light yg anggap matahari
+const dirLightFolder = lightFolder.addFolder('Matahari');
+dirLightFolder.add(directionalLight,'visible').name('Toggle On/Off');
+dirLightFolder.add(directionalLight.position,'x',-100,100).name('Move x Postition');
+dirLightFolder.add(directionalLight.position,'y',50,100).name('Move y Postition');
+dirLightFolder.add(directionalLight.position,'z',-100,100).name('Move z Postition');
+dirLightFolder.add(directionalLight.scale,'x',0,2).name('Scaling X');
+dirLightFolder.add(directionalLight.scale,'y',0,2).name('Scaling Y');
+dirLightFolder.add(directionalLight.scale,'z',0,2).name('Scaling Z');
+
+//ship lights
+const shipLightFolder = lightFolder.addFolder('Lampu Kapal');
+
+shipLightFolder.add(lsLant3,'visible',).name('Ship Bow Light');
+shipLightFolder.add(lsLant3,'intensity',0,5).name('Front Light Intensity');
+shipLightFolder.add(lsLant1,'visible',).name('Ship Hull Light');
+shipLightFolder.add(lsLant1,'intensity',0,5).name('Middle Light Intensity');
+shipLightFolder.add(lsLant2,'visible',).name('Ship Stern Light');
+shipLightFolder.add(lsLant2,'intensity',0,5).name('Back Light Intensity');
+
+//fog 
+scene.fog = new THREE.FogExp2(0xEFD1B5,0.01);
+scene.background = new THREE.Color(0xEFD1B5);
 
 // CLOCK
 const clock = new THREE.Clock();
@@ -255,7 +295,6 @@ function animate() {
 function lanternLoader(){
 
   //lampu kapal #1
-  let lantern1OBJ;
   gltfLoader.load("./old_lantern/scene.gltf", (gltf) => {
     lantern1OBJ = gltf.scene;
     lantern1OBJ.traverse((c) => {
@@ -270,7 +309,6 @@ function lanternLoader(){
     lantern1OBJ.scale.set(0.01, 0.01, 0.01);
     shipModel.add(lantern1OBJ);
     //light source buat lampu abal
-    const lsLant1 = new THREE.PointLight(0xc9343a, 8, 45, 5);
     lsLant1.position.y = 4;
     lsLant1.position.x = 4;
   
@@ -282,7 +320,6 @@ function lanternLoader(){
   });
   
   //lampu ke 2 (putih)
-  let lantern2OBJ;
   gltfLoader.load("./old_street_lantern/scene.gltf", (gltf) => {
     lantern2OBJ = gltf.scene;
     lantern2OBJ.traverse((c) => {
@@ -298,7 +335,6 @@ function lanternLoader(){
     lantern2OBJ.scale.set(0.03, 0.03, 0.03);
     shipModel.add(lantern2OBJ);
     //light source buat lampu putih
-    const lsLant2 = new THREE.PointLight(0xffffff, 5, 45, 5);
     lsLant2.position.y = 12;
     lsLant2.position.x = -1;
     lsLant2.position.z = 2;
@@ -337,9 +373,7 @@ function lanternLoader(){
   sphereLampu.add(lantern3OBJ);
   
   //light source buat lampu 3
-  const lsLant3 = new THREE.PointLight(0xffbc3d, 5, 45, 5);
   lsLant3.position.y = 5.5;
-  // lsLant3.position.x = -1;
   lsLant3.position.z = 0.2;
   lsLant3.castShadow = true;
   //light helper
@@ -350,3 +384,7 @@ function lanternLoader(){
   }
 
 animate();
+
+
+
+
