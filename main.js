@@ -24,7 +24,8 @@ function onWindowResize() {
 const scene = new THREE.Scene();
 
 //fog 
-scene.fog = new THREE.FogExp2(0xEFD1B5,0.01);
+const fogger = new THREE.FogExp2(0xEFD1B5,0.01);
+scene.fog = fogger;
 scene.background = new THREE.Color(0xEFD1B5);
 
 
@@ -153,9 +154,9 @@ let sphereLampu;
 let lantern3OBJ;
 let lantern2OBJ;
 let lantern1OBJ;
-const lsLant1 = new THREE.PointLight(0xc9343a, 5, 45, 5);
-const lsLant2 = new THREE.PointLight(0xffffff, 5, 45, 5);
-const lsLant3 = new THREE.PointLight(0xffbc3d, 5, 45, 5);
+const lsLant1 = new THREE.PointLight(0xc9343a, 5, 20,5);
+const lsLant2 = new THREE.PointLight(0xffffff, 5, 20,5);
+const lsLant3 = new THREE.PointLight(0xffbc3d, 5, 15,5);
 gltfLoader.load("./ship/scene.gltf", (gltf) => {
   shipModel = gltf.scene;
   shipModel.traverse((c) => {
@@ -177,9 +178,6 @@ gltfLoader.load("./ship/scene.gltf", (gltf) => {
   lanternLoader();
   scene.add(shipModel);
 });
-
-//FOG
-//scene.fog = new THREE.Fog
 
 const floor = new THREE.Mesh(
   new THREE.PlaneGeometry(150, 150),
@@ -247,11 +245,18 @@ dirLightFolder.add(directionalLight.scale,'z',0,2).name('Scaling Z');
 const shipLightFolder = lightFolder.addFolder('Lampu Kapal');
 
 shipLightFolder.add(lsLant3,'visible',).name('Ship Bow Light');
-shipLightFolder.add(lsLant3,'intensity',0,5).name('Front Light Intensity');
+// shipLightFolder.add(lsLant3,'distance',1,45).name('Front Light Intensity');
 shipLightFolder.add(lsLant1,'visible',).name('Ship Hull Light');
-shipLightFolder.add(lsLant1,'intensity',0,5).name('Middle Light Intensity');
+// shipLightFolder.add(lsLant1,'distance',1,45).name('Middle Light Intensity');
 shipLightFolder.add(lsLant2,'visible',).name('Ship Stern Light');
-shipLightFolder.add(lsLant2,'intensity',0,5).name('Back Light Intensity');
+// shipLightFolder.add(lsLant2,'distance',1,45).name('Back Light Intensity');
+
+//test ganti warna bg
+// const params = {
+//   bgColor: scene.background.getHex(),
+// };
+// gui.add(params , 'bgColor').onChange((value) => scene.background.set(value));
+gui.add(fogger,'density',0,0.02).name('fogging');
 
 
 
