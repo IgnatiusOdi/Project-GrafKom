@@ -56,22 +56,23 @@ const controls = new OrbitControls(camera, renderer.domElement);
 // controls.minDistance = 50;
 // controls.maxDistance = 250;
 
+const toggleButton = document.getElementById('camera');
+toggleButton.addEventListener('click',function(){
+  if (switchControls == 1) {
+    alert("Pointer Lock Controls Enabled");
+    switchControls = 2;
+    camera.position.y = 10;
+    controls.enabled = false;
+  } else {
+    alert("Orbit Controls Enabled");
+    switchControls = 1;
+    controls.enabled = true;
+  }
+});
+
 window.addEventListener("keydown", function(e) {
   if (e.defaultPrevented) {
     return;
-  }
-
-  if (e.key == "`") {
-    if (switchControls == 1) {
-      this.window.alert("Pointer Lock Controls Enabled");
-      switchControls = 2;
-      camera.position.y = 10;
-      controls.enabled = false;
-    } else {
-      this.window.alert("Orbit Controls Enabled");
-      switchControls = 1;
-      controls.enabled = true;
-    }
   }
 
   if (pointerLockControls.isLocked) {
@@ -91,6 +92,7 @@ const pointerLockControls = new PointerLockControls(
   camera,
   renderer.domElement
 );
+
 window.addEventListener("click", function () {
   if (switchControls == 2) {
     pointerLockControls.lock();
@@ -220,6 +222,10 @@ scene.add(gridHelper);
 
 //GUI
 const gui = new GUI();
+// const cameraFolder = gui.addFolder('Contorls');
+// cameraFolder.open();
+// cameraFolder.add(controls,'enabled').name('test');
+
 const lightFolder = gui.addFolder('Lighting');
 lightFolder.open();
 //dirrectional light yg anggap matahari
@@ -241,6 +247,8 @@ shipLightFolder.add(lsLant1,'visible',).name('Ship Hull Light');
 shipLightFolder.add(lsLant1,'intensity',0,5).name('Middle Light Intensity');
 shipLightFolder.add(lsLant2,'visible',).name('Ship Stern Light');
 shipLightFolder.add(lsLant2,'intensity',0,5).name('Back Light Intensity');
+
+
 
 //fog 
 scene.fog = new THREE.FogExp2(0xEFD1B5,0.01);
