@@ -1,37 +1,31 @@
 import "./style.css";
 
 import * as THREE from "three";
-import { GUI } from 'dat.gui';
+import { GUI } from "dat.gui";
 
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { Water } from "three/examples/jsm/objects/Water";
+import { Sky } from "three/examples/jsm/objects/Sky.js";
 
+// VARIABLES
 let switchControls = 1;
-
-
-// WINDOW EVENT LISTENER
-window.addEventListener("resize", onWindowResize, false);
-
-function onWindowResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-}
+let velocity = 0;
+let sudutX = 0.001;
+let sudutZ = 0.00025;
+let goyang = 0.005;
 
 // SCENE
 const scene = new THREE.Scene();
 
-//fog 
-const fogger = new THREE.FogExp2(0xEFD1B5,0.01);
+// FOG
+const fogger = new THREE.FogExp2(0xffffff, 0);
 scene.fog = fogger;
-scene.background = new THREE.Color(0xEFD1B5);
-
 
 // CAMERA
 const camera = new THREE.PerspectiveCamera(
-  70,
+  75,
   window.innerWidth / window.innerHeight,
   0.1,
   1000
@@ -41,29 +35,25 @@ camera.position.set(0, 50, 50);
 // RENDERER
 const renderer = new THREE.WebGLRenderer({
   canvas: document.querySelector("#bg"),
-  antialias: true,
   powerPreference: "high-performance",
 });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0x2b2f77, 1);
-// renderer.shadowMap.enabled = true;
-// renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.gammaFactor = 2.2;
+renderer.setClearColor(0x000000, 1);
+renderer.shadowMap.enabled = true;
 renderer.outputEncoding = THREE.sRGBEncoding;
-// renderer.toneMapping = THREE.ACESFilmicToneMapping;
-// renderer.toneMappingExposure = 1.0;
 
 // CONTROLS
 const controls = new OrbitControls(camera, renderer.domElement);
-// controls.autoRotate = true;
-// controls.autoRotate = 0.5;
-// controls.enableDamping = true;
-// controls.minDistance = 50;
-// controls.maxDistance = 250;
+controls.maxPolarAngle = Math.PI * 0.55;
+controls.maxDistance = 100;
+const pointerLockControls = new PointerLockControls(
+  camera,
+  renderer.domElement
+);
 
-const toggleButton = document.getElementById('camera');
-toggleButton.addEventListener('click',function(){
+const toggleButton = document.getElementById("control");
+toggleButton.addEventListener("click", function () {
   if (switchControls == 1) {
     alert("Pointer Lock Controls Enabled");
     switchControls = 2;
@@ -73,35 +63,6 @@ toggleButton.addEventListener('click',function(){
     alert("Orbit Controls Enabled");
     switchControls = 1;
     controls.enabled = true;
-  }
-});
-
-window.addEventListener("keydown", function(e) {
-  if (e.defaultPrevented) {
-    return;
-  }
-
-  if (pointerLockControls.isLocked) {
-    if (e.key == "w") {
-      pointerLockControls.moveForward(2);
-    } else if (e.key == "a") {
-      pointerLockControls.moveRight(-2);
-    } else if (e.key == "s") {
-      pointerLockControls.moveForward(-2);
-    } else if (e.key == "d") {
-      pointerLockControls.moveRight(2);
-    }
-  }
-});
-
-const pointerLockControls = new PointerLockControls(
-  camera,
-  renderer.domElement
-);
-
-window.addEventListener("click", function () {
-  if (switchControls == 2) {
-    pointerLockControls.lock();
   }
 });
 
@@ -115,12 +76,9 @@ const center = new THREE.Mesh(
 );
 scene.add(center);
 
-
-
-// MANAGER
+// LOADER MANAGER
 const manager = new THREE.LoadingManager();
-manager.onLoad = () => animate();
-
+// manager.onLoad = () => animate();
 const gltfLoader = new GLTFLoader(manager);
 
 // SHARK
@@ -128,15 +86,15 @@ let shark;
 gltfLoader.load("./great_white_shark/scene.gltf", (gltf) => {
   let sharky = gltf.scene;
   sharky.traverse((c) => {
-    if (c.isMesh || c.isLight) {
-      c.castShadow = true;
-      c.receiveShadow = true;
+    if (c.isMesh) {
+      c.castShadow = false;
+      c.receiveShadow = false;
     }
   });
 
-  sharky.position.y = -5;
   sharky.position.x = 0;
-  sharky.position.z = 80;
+  sharky.position.y = -5;
+  sharky.position.z = 45;
   sharky.rotateY(1.55);
   sharky.scale.set(0.02, 0.02, 0.02);
 
@@ -151,24 +109,18 @@ gltfLoader.load("./great_white_shark/scene.gltf", (gltf) => {
 // SHIP
 let shipModel;
 let sphereLampu;
-let lantern3OBJ;
-let lantern2OBJ;
-let lantern1OBJ;
-const lsLant1 = new THREE.PointLight(0xc9343a, 5, 20,5);
-const lsLant2 = new THREE.PointLight(0xffffff, 5, 20,5);
-const lsLant3 = new THREE.PointLight(0xffbc3d, 5, 15,5);
+let shipHullLantern;
+let shipBowLantern;
+let shipSternLantern;
+const shipHullLight = new THREE.PointLight(0xc9343a, 5, 20, 5);
+const shipBowLight = new THREE.PointLight(0xffbc3d, 5, 15, 5);
+const shipSternLight = new THREE.PointLight(0xffffff, 5, 20, 5);
 gltfLoader.load("./ship/scene.gltf", (gltf) => {
   shipModel = gltf.scene;
   shipModel.traverse((c) => {
     if (c.isMesh) {
       c.castShadow = true;
       c.receiveShadow = true;
-      if (c.material.transparent) {
-        shipModel.alphaMode = "BLEND";
-      } else if (c.material.alphaTest > 0.0) {
-        shipModel.alphaMode = "MASK";
-        shipModel.alphaCutoff = c.material.alphaTest;
-      }
     }
   });
 
@@ -179,109 +131,271 @@ gltfLoader.load("./ship/scene.gltf", (gltf) => {
   scene.add(shipModel);
 });
 
-const floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(150, 150),
-  new THREE.MeshStandardMaterial({ color: 0x67c1ca })
+// SKY
+let sun = new THREE.Vector3();
+const parameters = { elevation: 0, azimuth: 0}
+const sky = new Sky();
+sky.scale.setScalar(250);
+scene.add(sky);
+
+const skyUniforms = sky.material.uniforms;
+skyUniforms["turbidity"].value = 0;
+skyUniforms["rayleigh"].value = 1;
+skyUniforms["mieCoefficient"].value = 0.1;
+skyUniforms["mieDirectionalG"].value = 1;
+
+// FLOOR
+// var waterTexture = new THREE.TextureLoader().load("textures/sea.jpg");
+// waterTexture.wrapS = waterTexture.wrapT = THREE.RepeatWrapping;
+
+// const floor = new THREE.Mesh(
+//   new THREE.BoxGeometry(125, 125, 10),
+//   new THREE.MeshBasicMaterial({ side: DoubleSide, map: waterTexture })
+// );
+// floor.rotateX(-Math.PI / 2);
+// floor.position.y = -5;
+// scene.add(floor);
+
+// WATER
+const waterNormal = new THREE.TextureLoader().load(
+  "textures/water.jpeg",
+  (texture) => {
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  }
 );
-floor.rotateX(-Math.PI / 2);
-scene.add(floor);
 
-//WATER
-// const water = new Water(new THREE.BoxGeometry(100, 100, 5), {
-//   textureWidth: 512,
-//   textureHeight: 512,
-//   waterNormals: new THREE.TextureLoader().load(
-//     "textures/water.jpeg",
-//     (texture) => {
-//       texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-//     }
-//   ),
-//   sunDirection: new THREE.Vector3(),
-//   sunColor: 0xffffff,
-//   waterColor: 0x67c1ca,
-//   distortionScale: 3.7,
-//   fog: scene.fog !== undefined,
-// });
-// water.rotation.x = -Math.PI / 2;
-// scene.add(water);
+const water = new Water(new THREE.BoxGeometry(250, 10, 250), {
+  waterNormals: waterNormal,
+  sunColor: 0xffffff,
+  waterColor: 0x003851,
+  distortionScale: 5,
+  side: THREE.DoubleSide,
+  fog: scene.fog !== undefined,
+});
+water.position.y = -5;
+scene.add(water);
 
-// LIGHT
+const pmremGenerator = new THREE.PMREMGenerator(renderer);
+
+function updateSun() {
+  const phi = THREE.MathUtils.degToRad(90 - parameters.elevation);
+  const theta = THREE.MathUtils.degToRad(parameters.azimuth);
+
+  sun.setFromSphericalCoords(1, phi, theta);
+
+  skyUniforms["sunPosition"].value.copy(sun);
+  water.material.uniforms["sunDirection"].value.copy(sun).normalize();
+  scene.environment = pmremGenerator.fromScene(sky).texture;
+}
+updateSun();
+
+// DIRECTIONAL LIGHT
 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.2);
 directionalLight.position.set(0, 100, 0);
 directionalLight.target = center;
 directionalLight.castShadow = true;
-scene.add(directionalLight);
+// scene.add(directionalLight);
 
 // HELPER
 const directionalLightHelper = new THREE.DirectionalLightHelper(
   directionalLight,
   15
 );
-const gridHelper = new THREE.GridHelper(200, 200);
-scene.add(directionalLightHelper);
-scene.add(gridHelper);
+// const gridHelper = new THREE.GridHelper(100, 100);
+// scene.add(directionalLightHelper);
 
-
-
-//GUI
+// GUI
 const gui = new GUI();
-// const cameraFolder = gui.addFolder('Contorls');
-// cameraFolder.open();
-// cameraFolder.add(controls,'enabled').name('test');
-
-const lightFolder = gui.addFolder('Lighting');
+const lightFolder = gui.addFolder("Lighting");
 lightFolder.open();
-//dirrectional light yg anggap matahari
-const dirLightFolder = lightFolder.addFolder('Matahari');
-dirLightFolder.add(directionalLight,'visible').name('Toggle On/Off');
-dirLightFolder.add(directionalLight.position,'x',-100,100).name('Move x Postition');
-dirLightFolder.add(directionalLight.position,'y',50,100).name('Move y Postition');
-dirLightFolder.add(directionalLight.position,'z',-100,100).name('Move z Postition');
-dirLightFolder.add(directionalLight.scale,'x',0,2).name('Scaling X');
-dirLightFolder.add(directionalLight.scale,'y',0,2).name('Scaling Y');
-dirLightFolder.add(directionalLight.scale,'z',0,2).name('Scaling Z');
 
-//ship lights
-const shipLightFolder = lightFolder.addFolder('Lampu Kapal');
+const skyFolder = lightFolder.addFolder("Sky");
+// skyFolder.add(sky, "visible").name("Sky");
+skyFolder.add(parameters, "elevation", 0, 90, 1).onChange(updateSun);
+skyFolder.add(parameters, "azimuth", -180, 180, 1).onChange(updateSun);
+skyFolder.open();
 
-shipLightFolder.add(lsLant3,'visible',).name('Ship Bow Light');
-// shipLightFolder.add(lsLant3,'distance',1,45).name('Front Light Intensity');
-shipLightFolder.add(lsLant1,'visible',).name('Ship Hull Light');
-// shipLightFolder.add(lsLant1,'distance',1,45).name('Middle Light Intensity');
-shipLightFolder.add(lsLant2,'visible',).name('Ship Stern Light');
-// shipLightFolder.add(lsLant2,'distance',1,45).name('Back Light Intensity');
+// MATAHARI
+const dirLightFolder = lightFolder.addFolder("Matahari");
+dirLightFolder.add(directionalLight, "visible").name("Toggle On/Off");
+dirLightFolder
+  .add(directionalLight.position, "x", -100, 100)
+  .name("Move x Postition");
+dirLightFolder
+  .add(directionalLight.position, "y", 50, 100)
+  .name("Move y Postition");
+dirLightFolder
+  .add(directionalLight.position, "z", -100, 100)
+  .name("Move z Postition");
+dirLightFolder.add(directionalLight.scale, "x", 0, 2).name("Scaling X");
+dirLightFolder.add(directionalLight.scale, "y", 0, 2).name("Scaling Y");
+dirLightFolder.add(directionalLight.scale, "z", 0, 2).name("Scaling Z");
+
+// LAMPU KAPAL
+const shipLightFolder = lightFolder.addFolder("Lampu Kapal");
+shipLightFolder.add(shipBowLight, "visible").name("Ship Bow Light");
+// shipLightFolder.add(shipBowLight,'distance',1,45).name('Front Light Intensity');
+shipLightFolder.add(shipHullLight, "visible").name("Ship Hull Light");
+// shipLightFolder.add(shipHullLight,'distance',1,45).name('Middle Light Intensity');
+shipLightFolder.add(shipSternLight, "visible").name("Ship Stern Light");
+// shipLightFolder.add(shipSternLight,'distance',1,45).name('Back Light Intensity');
 
 //test ganti warna bg
 // const params = {
 //   bgColor: scene.background.getHex(),
 // };
 // gui.add(params , 'bgColor').onChange((value) => scene.background.set(value));
-gui.add(fogger,'density',0,0.02).name('fogging');
-
-
-
+gui.add(fogger, "density", 0, 0.02, 0.001).name("Fog Density");
 
 // CLOCK
 const clock = new THREE.Clock();
 
-let sudutX = 0.001;
-let sudutZ = 0.00025;
-let goyang = 0.005;
+function lanternLoader() {
+  // SHIP HULL
+  gltfLoader.load("./old_lantern/scene.gltf", (gltf) => {
+    shipHullLantern = gltf.scene;
+    shipHullLantern.traverse((c) => {
+      if (c.isMesh) {
+        c.castShadow = false;
+        c.receiveShadow = true;
+      }
+    });
+    shipHullLantern.position.y = 0;
+    shipHullLantern.position.z = 0.55;
+    shipHullLantern.rotateY(1.55);
+    shipHullLantern.scale.set(0.01, 0.01, 0.01);
+    shipModel.add(shipHullLantern);
 
+    // SHIP HULL LIGHT SOURCE
+    shipHullLight.position.y = 4;
+    shipHullLight.position.x = 4;
+    shipHullLight.castShadow = true;
+    shipHullLantern.add(shipHullLight);
 
+    // LIGHT HELPER
+    // const lsHelper = new THREE.PointLightHelper(shipHullLight, 10);
+    // scene.add(lsHelper);
+  });
+
+  // SHIP STERN
+  gltfLoader.load("./old_street_lantern/scene.gltf", (gltf) => {
+    shipSternLantern = gltf.scene;
+    shipSternLantern.traverse((c) => {
+      if (c.isMesh) {
+        c.castShadow = false;
+        c.receiveShadow = true;
+      }
+    });
+    shipSternLantern.position.x = -0.09;
+    shipSternLantern.position.y = 0;
+    shipSternLantern.position.z = 4.06;
+    shipSternLantern.scale.set(0.03, 0.03, 0.03);
+    shipModel.add(shipSternLantern);
+
+    // SHIP STERN LIGHT SOURCE
+    shipSternLight.position.x = -1;
+    shipSternLight.position.y = 12;
+    shipSternLight.position.z = 2;
+    shipSternLight.castShadow = true;
+    shipSternLantern.add(shipSternLight);
+
+    // LIGHT HELPER
+    // const lsHelper2 = new THREE.PointLightHelper(shipSternLight, 1);
+    // scene.add(lsHelper2);
+  });
+
+  // SPHERE FOR SHIP BOW LANTERN PLACEMENT
+  sphereLampu = new THREE.Mesh(
+    new THREE.SphereGeometry(2, 12, 12),
+    new THREE.MeshStandardMaterial({
+      transparent: true,
+      opacity: 0,
+    })
+  );
+  sphereLampu.position.x = 0.155;
+  sphereLampu.position.y = 0.05;
+  sphereLampu.position.z = -4.11;
+  sphereLampu.scale.set(0.01, 0.01, 0.01);
+  shipModel.add(sphereLampu);
+
+  // SHIP BOW
+  gltfLoader.load("./skull_lantern/scene.gltf", (gltf) => {
+    shipBowLantern = gltf.scene;
+    shipBowLantern.traverse((c) => {
+      if (c.isMesh) {
+        c.castShadow = false;
+        c.receiveShadow = true;
+      }
+    });
+    shipBowLantern.position.y = -35;
+    shipBowLantern.rotateY(3.1);
+    shipBowLantern.scale.set(2, 2, 2);
+    sphereLampu.add(shipBowLantern);
+
+    // SHIP BOW LIGHT SOURCE
+    shipBowLight.position.y = 5.5;
+    shipBowLight.position.z = 0.2;
+    shipBowLight.castShadow = true;
+    shipBowLantern.add(shipBowLight);
+
+    // LIGHT HELPER
+    // const lsHelper3 = new THREE.PointLightHelper(shipBowLight, 1);
+    // scene.add(lsHelper3);
+  });
+}
+
+// EVENT LISTENER
+window.addEventListener(
+  "resize",
+  () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  },
+  false
+);
+
+document.addEventListener("click", () => {
+  if (switchControls == 2) {
+    pointerLockControls.lock();
+  }
+});
+
+document.addEventListener("keydown", (e) => {
+  if (pointerLockControls.isLocked) {
+    if (e.key == "w") {
+      pointerLockControls.moveForward(velocity);
+    } else if (e.key == "a") {
+      pointerLockControls.moveRight(-velocity);
+    } else if (e.key == "s") {
+      pointerLockControls.moveForward(-velocity);
+    } else if (e.key == "d") {
+      pointerLockControls.moveRight(velocity);
+    }
+  }
+});
 
 function animate() {
-  center.rotateY(0.004);
+  water.material.uniforms["time"].value += 1.0 / 60.0;
+
+  center.rotateY(0.01);
+
+  if (pointerLockControls.isLocked) {
+    velocity = 300 * clock.getDelta();
+    if (velocity > 50) {
+      console.log(velocity);
+    }
+  }
 
   if (shark) {
     shark.update(clock.getDelta());
   }
 
-  if(sphereLampu){
-    if(sphereLampu.rotation.z > 0.2 || sphereLampu.rotation.z < -0.2)
+  if (sphereLampu) {
+    if (sphereLampu.rotation.z > 0.2 || sphereLampu.rotation.z < -0.2)
       goyang *= -1;
   }
-  
+
   if (shipModel) {
     if (shipModel.rotation.x > 0.15 || shipModel.rotation.x < -0.02) {
       sudutX *= -1;
@@ -298,108 +412,12 @@ function animate() {
     sphereLampu.rotateZ(goyang);
   }
 
-  // water.material.uniforms["time"].value += 1.0 / 120.0;
-
-  requestAnimationFrame(animate);
   if (switchControls == 1) {
     controls.update();
   }
+
   renderer.render(scene, camera);
+  requestAnimationFrame(animate);
 }
 
-function lanternLoader(){
-
-  //lampu kapal #1
-  gltfLoader.load("./old_lantern/scene.gltf", (gltf) => {
-    lantern1OBJ = gltf.scene;
-    lantern1OBJ.traverse((c) => {
-      if (c.isMesh) {
-        c.castShadow = false;
-        c.receiveShadow = true;
-      }
-    });
-    lantern1OBJ.position.y = 0;
-    lantern1OBJ.rotateY(1.55);
-    lantern1OBJ.position.z = 0.55;
-    lantern1OBJ.scale.set(0.01, 0.01, 0.01);
-    shipModel.add(lantern1OBJ);
-    //light source buat lampu abal
-    lsLant1.position.y = 4;
-    lsLant1.position.x = 4;
-  
-    lsLant1.castShadow = true;
-    //light helper
-    const lsHelper = new THREE.PointLightHelper(lsLant1, 10);
-    lantern1OBJ.add(lsLant1);
-    scene.add(lsHelper);
-  });
-  
-  //lampu ke 2 (putih)
-  gltfLoader.load("./old_street_lantern/scene.gltf", (gltf) => {
-    lantern2OBJ = gltf.scene;
-    lantern2OBJ.traverse((c) => {
-      if (c.isMesh) {
-        c.castShadow = false;
-        c.receiveShadow = true;
-      }
-    });
-    lantern2OBJ.position.y = 0;
-  
-    lantern2OBJ.position.z = 4.06;
-    lantern2OBJ.position.x = -0.09;
-    lantern2OBJ.scale.set(0.03, 0.03, 0.03);
-    shipModel.add(lantern2OBJ);
-    //light source buat lampu putih
-    lsLant2.position.y = 12;
-    lsLant2.position.x = -1;
-    lsLant2.position.z = 2;
-    lsLant2.castShadow = true;
-    //light helper
-    const lsHelper2 = new THREE.PointLightHelper(lsLant2, 1);
-    lantern2OBJ.add(lsLant2);
-    scene.add(lsHelper2);
-  });
-  //sphere buat pacuan lampu gantung
-  sphereLampu = new THREE.Mesh(
-    new THREE.SphereGeometry(2, 12, 12),
-    new THREE.MeshStandardMaterial({
-      transparent: true,
-      opacity: 0,
-    })
-    );
-    sphereLampu.position.x = 0.155;
-    sphereLampu.position.y = 0.05;
-    sphereLampu.position.z = -4.11;
-    sphereLampu.scale.set(0.01,0.01,0.01);
-  
-  shipModel.add(sphereLampu);
-  //lampu ke 3 (kuning / terngkorak)
-  gltfLoader.load("./skull_lantern/scene.gltf", (gltf) => {
-  lantern3OBJ = gltf.scene;
-  lantern3OBJ.traverse((c) => {
-    if (c.isMesh) {
-      c.castShadow = false;
-      c.receiveShadow = true;
-    }
-  });
-  lantern3OBJ.rotateY(3.1);
-  lantern3OBJ.position.y = -35;
-  lantern3OBJ.scale.set(2, 2, 2);
-  sphereLampu.add(lantern3OBJ);
-  
-  //light source buat lampu 3
-  lsLant3.position.y = 5.5;
-  lsLant3.position.z = 0.2;
-  lsLant3.castShadow = true;
-  //light helper
-  const lsHelper3 = new THREE.PointLightHelper(lsLant3, 1);
-  lantern3OBJ.add(lsLant3);
-  scene.add(lsHelper3);
-  });
-  }
-
 animate();
-
-
-
-
