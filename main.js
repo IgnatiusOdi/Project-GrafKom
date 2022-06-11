@@ -23,6 +23,11 @@ function onWindowResize() {
 // SCENE
 const scene = new THREE.Scene();
 
+//fog 
+scene.fog = new THREE.FogExp2(0xEFD1B5,0.01);
+scene.background = new THREE.Color(0xEFD1B5);
+
+
 // CAMERA
 const camera = new THREE.PerspectiveCamera(
   70,
@@ -250,9 +255,6 @@ shipLightFolder.add(lsLant2,'intensity',0,5).name('Back Light Intensity');
 
 
 
-//fog 
-scene.fog = new THREE.FogExp2(0xEFD1B5,0.01);
-scene.background = new THREE.Color(0xEFD1B5);
 
 // CLOCK
 const clock = new THREE.Clock();
