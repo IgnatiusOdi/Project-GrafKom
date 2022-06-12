@@ -85,7 +85,6 @@ scene.add(center);
 
 // LOADER MANAGER
 const manager = new THREE.LoadingManager();
-// manager.onLoad = () => animate();
 const gltfLoader = new GLTFLoader(manager);
 
 // SHARK
@@ -151,18 +150,6 @@ skyUniforms["rayleigh"].value = 1;
 skyUniforms["mieCoefficient"].value = 0.1;
 skyUniforms["mieDirectionalG"].value = 1;
 
-// FLOOR
-// var waterTexture = new THREE.TextureLoader().load("textures/sea.jpg");
-// waterTexture.wrapS = waterTexture.wrapT = THREE.RepeatWrapping;
-
-// const floor = new THREE.Mesh(
-//   new THREE.BoxGeometry(125, 125, 10),
-//   new THREE.MeshBasicMaterial({ side: DoubleSide, map: waterTexture })
-// );
-// floor.rotateX(-Math.PI / 2);
-// floor.position.y = -5;
-// scene.add(floor);
-
 // WATER
 const waterNormal = new THREE.TextureLoader().load(
   "textures/water.jpeg",
@@ -196,62 +183,25 @@ function updateSun() {
 }
 updateSun();
 
-// DIRECTIONAL LIGHT
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.2);
-directionalLight.position.set(0, 100, 0);
-directionalLight.target = center;
-directionalLight.castShadow = true;
-// scene.add(directionalLight);
-
-// HELPER
-const directionalLightHelper = new THREE.DirectionalLightHelper(
-  directionalLight,
-  15
-);
-// const gridHelper = new THREE.GridHelper(100, 100);
-// scene.add(directionalLightHelper);
-
 // GUI
 const gui = new GUI();
 const lightFolder = gui.addFolder("Lighting");
 lightFolder.open();
-
+//SKY
 const skyFolder = lightFolder.addFolder("Sky");
-// skyFolder.add(sky, "visible").name("Sky");
 skyFolder.add(parameters, "elevation", 0, 90, 1).onChange(updateSun);
 skyFolder.add(parameters, "azimuth", -180, 180, 1).onChange(updateSun);
 skyFolder.open();
-
-// MATAHARI
-const dirLightFolder = lightFolder.addFolder("Matahari");
-dirLightFolder.add(directionalLight, "visible").name("Toggle On/Off");
-dirLightFolder
-  .add(directionalLight.position, "x", -100, 100)
-  .name("Move x Postition");
-dirLightFolder
-  .add(directionalLight.position, "y", 50, 100)
-  .name("Move y Postition");
-dirLightFolder
-  .add(directionalLight.position, "z", -100, 100)
-  .name("Move z Postition");
-dirLightFolder.add(directionalLight.scale, "x", 0, 2).name("Scaling X");
-dirLightFolder.add(directionalLight.scale, "y", 0, 2).name("Scaling Y");
-dirLightFolder.add(directionalLight.scale, "z", 0, 2).name("Scaling Z");
-
 // LAMPU KAPAL
 const shipLightFolder = lightFolder.addFolder("Lampu Kapal");
 shipLightFolder.add(shipBowLight, "visible").name("Ship Bow Light");
-// shipLightFolder.add(shipBowLight,'distance',1,45).name('Front Light Intensity');
+shipLightFolder.add(shipBowLight,'intensity',0,5).name('Front Light Intensity');
 shipLightFolder.add(shipHullLight, "visible").name("Ship Hull Light");
-// shipLightFolder.add(shipHullLight,'distance',1,45).name('Middle Light Intensity');
+shipLightFolder.add(shipHullLight,'intensity',0,5).name('Middle Light Intensity');
 shipLightFolder.add(shipSternLight, "visible").name("Ship Stern Light");
-// shipLightFolder.add(shipSternLight,'distance',1,45).name('Back Light Intensity');
+shipLightFolder.add(shipSternLight,'intensity',0,5).name('Back Light Intensity');
 
-//test ganti warna bg
-// const params = {
-//   bgColor: scene.background.getHex(),
-// };
-// gui.add(params , 'bgColor').onChange((value) => scene.background.set(value));
+
 gui.add(fogger, "density", 0, 0.02, 0.001).name("Fog Density");
 
 // CLOCK
@@ -279,9 +229,6 @@ function lanternLoader() {
     shipHullLight.castShadow = true;
     shipHullLantern.add(shipHullLight);
 
-    // LIGHT HELPER
-    // const lsHelper = new THREE.PointLightHelper(shipHullLight, 10);
-    // scene.add(lsHelper);
   });
 
   // SHIP STERN
@@ -306,9 +253,6 @@ function lanternLoader() {
     shipSternLight.castShadow = true;
     shipSternLantern.add(shipSternLight);
 
-    // LIGHT HELPER
-    // const lsHelper2 = new THREE.PointLightHelper(shipSternLight, 1);
-    // scene.add(lsHelper2);
   });
 
   // SPHERE FOR SHIP BOW LANTERN PLACEMENT
@@ -345,9 +289,6 @@ function lanternLoader() {
     shipBowLight.castShadow = true;
     shipBowLantern.add(shipBowLight);
 
-    // LIGHT HELPER
-    // const lsHelper3 = new THREE.PointLightHelper(shipBowLight, 1);
-    // scene.add(lsHelper3);
   });
 }
 
