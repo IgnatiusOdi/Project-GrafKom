@@ -2,12 +2,12 @@ import "./style.css";
 
 import * as THREE from "three";
 import { GUI } from "dat.gui";
-
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { Water } from "three/examples/jsm/objects/Water";
 import { Sky } from "three/examples/jsm/objects/Sky.js";
+import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 // VARIABLES
 let switchControls = 1;
@@ -31,6 +31,13 @@ const camera = new THREE.PerspectiveCamera(
   1000
 );
 camera.position.set(0, 50, 50);
+
+//STATS
+const container = document.getElementById('kontainer');
+const stats = new Stats();
+stats.showPanel (0);
+container.appendChild( stats.dom );
+
 
 // RENDERER
 const renderer = new THREE.WebGLRenderer({
@@ -379,6 +386,8 @@ function animate() {
   water.material.uniforms["time"].value += 1.0 / 60.0;
 
   center.rotateY(0.01);
+
+  stats.update();
 
   if (pointerLockControls.isLocked) {
     velocity = 300 * clock.getDelta();
