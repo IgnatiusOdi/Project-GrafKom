@@ -39,7 +39,7 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0x000000, 1);
+// renderer.setClearColor(0x000000, 1);
 renderer.shadowMap.enabled = true;
 renderer.outputEncoding = THREE.sRGBEncoding;
 
@@ -52,20 +52,6 @@ const pointerLockControls = new PointerLockControls(
   renderer.domElement
 );
 
-const toggleButton = document.getElementById("control");
-toggleButton.addEventListener("click", function () {
-  if (switchControls == 1) {
-    alert("Pointer Lock Controls Enabled");
-    switchControls = 2;
-    camera.position.y = 10;
-    controls.enabled = false;
-  } else {
-    alert("Orbit Controls Enabled");
-    switchControls = 1;
-    controls.enabled = true;
-  }
-});
-
 // SKY
 let sun = new THREE.Vector3();
 const parameters = { elevation: 0, azimuth: 0}
@@ -74,10 +60,10 @@ sky.scale.setScalar(250);
 scene.add(sky);
 
 const skyUniforms = sky.material.uniforms;
-skyUniforms["turbidity"].value = 0;
+skyUniforms["turbidity"].value = 1;
 skyUniforms["rayleigh"].value = 1;
 skyUniforms["mieCoefficient"].value = 0.1;
-skyUniforms["mieDirectionalG"].value = 1;
+skyUniforms["mieDirectionalG"].value = 0.999;
 
 // WATER
 const waterNormal = new THREE.TextureLoader().load(
@@ -319,6 +305,20 @@ document.addEventListener("keydown", (e) => {
     } else if (e.key == "d") {
       pointerLockControls.moveRight(velocity);
     }
+  }
+});
+
+const toggleButton = document.getElementById("control");
+toggleButton.addEventListener("click", function () {
+  if (switchControls == 1) {
+    alert("Pointer Lock Controls Enabled");
+    switchControls = 2;
+    camera.position.y = 10;
+    controls.enabled = false;
+  } else {
+    alert("Orbit Controls Enabled");
+    switchControls = 1;
+    controls.enabled = true;
   }
 });
 
